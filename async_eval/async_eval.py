@@ -4,9 +4,17 @@ import sys
 import textwrap
 import types
 from itertools import takewhile
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
-from _pydevd_bundle.pydevd_save_locals import save_locals
+try:
+    from _pydevd_bundle.pydevd_save_locals import save_locals
+except ImportError:  # pragma: no cover
+
+    import ctypes
+
+    def save_locals(frame: types.FrameType) -> None:
+        ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame), ctypes.c_int(1))
+
 
 _ASYNC_EVAL_CODE_TEMPLATE = textwrap.dedent(
     """\
@@ -115,4 +123,59 @@ def async_eval(expr: str, _globals: Optional[dict] = None, _locals: Optional[dic
         save_locals(caller)
 
 
+class _AsyncNodeFound(Exception):
+    pass
+
+
+class _AsyncCodeVisitor(ast.NodeVisitor):
+    def _ignore(self, _: ast.AST) -> Any:
+        return
+
+    def _done(self, _: Optional[ast.AST] = None) -> Any:
+        raise _AsyncNodeFound
+
+    def _visit_gen(self, node: Union[ast.GeneratorExp, ast.ListComp, ast.DictComp, ast.SetComp]) -> Any:
+        if any(gen.is_async for gen in node.generators):
+            self._done()
+
+        super().generic_visit(node)
+
+    def _visit_func(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> Any:
+        # check only args and decorators
+        for n in (node.args, *node.decorator_list):
+            super().generic_visit(n)
+
+    # special check for a function def
+    visit_AsyncFunctionDef = _visit_func
+    visit_FunctionDef = _visit_func
+
+    # no need to check function/class definitions
+    visit_ClassDef = _ignore  # type: ignore
+
+    # basic async statements
+    visit_AsyncFor = _done  # type: ignore
+    visit_AsyncWith = _done  # type: ignore
+    visit_Await = _done  # type: ignore
+
+    # all kind of a generator/comprehensions (they can be async)
+    visit_GeneratorExp = _visit_gen
+    visit_ListComp = _visit_gen
+    visit_SetComp = _visit_gen
+    visit_DictComp = _visit_gen
+
+
+def is_async_code(code: str) -> bool:
+    try:
+        module = ast.parse(code)
+    except SyntaxError:
+        return False
+
+    try:
+        return bool(_AsyncCodeVisitor().visit(module))
+    except _AsyncNodeFound:
+        return True
+
+
 sys.__async_eval__ = async_eval  # type: ignore
+
+__all__ = ["async_eval", "is_async_code"]

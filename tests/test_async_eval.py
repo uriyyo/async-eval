@@ -2,7 +2,7 @@ import textwrap
 
 from pytest import fixture, mark, raises
 
-from async_eval.async_eval import async_eval
+from async_eval.async_eval import async_eval, is_async_code
 
 from .utils import (  # noqa  # isort:skip
     MyException,
@@ -19,6 +19,92 @@ except ImportError:
 
 
 pytestmark = mark.asyncio
+
+
+@mark.parametrize(
+    "expr",
+    [
+        "await foo()",
+        "async for i in range(10):pass",
+        "async with i:pass",
+        "[i async for i in generator()]",
+        "{i async for i in generator()}",
+        "{i: i async for i in generator()}",
+        "(i async for i in generator())",
+        "try:\n    await foo()\nexcept:pass",
+        "[i for i in range() if await foo()]",
+        "{i for i in range() if await foo()}",
+        "{i: i for i in range() if await foo()}",
+        "(i for i in range() if await foo())",
+        "def foo(a = await bar()): pass",
+        "async def foo(a = await bar()): pass",
+        "@bar(await fizz())\ndef foo(): pass",
+        "@bar(await fizz())\nasync def foo(): pass",
+    ],
+    ids=[
+        "await",
+        "async-for",
+        "async-with",
+        "async-list-comprehension",
+        "async-set-comprehension",
+        "async-dict-comprehension",
+        "async-gen-expression",
+        "nested-await",
+        "async-list-with-async-if",
+        "async-set-with-async-if",
+        "async-dict-with-async-if",
+        "gen-expression-with-async-if",
+        "func-def-with-await-at-default-value",
+        "async-func-def-with-await-at-default-value",
+        "async-decorator-at-func",
+        "async-decorator-at-async-func",
+    ],
+)
+def test_is_async_code(expr):
+    assert is_async_code(expr)
+
+
+@mark.parametrize(
+    "expr",
+    [
+        "12312asdfasdf",
+        "foo()",
+        "for i in range(10):pass",
+        "with i:pass",
+        "[i async i in generator()]",
+        "{i async i in generator()}",
+        "{i: i for i in generator()}",
+        "(i for i in generator())",
+        "def foo(a = bar()): pass",
+        "async def foo(a = bar()): pass",
+        "@bar(fizz())\ndef foo(): pass",
+        "@bar(fizz())\nasync def foo(): pass",
+        "def foo():\n    await bar()",
+        "async def foo():\n    await bar()",
+        "async def foo():pass",
+        "class Foo:pass",
+    ],
+    ids=[
+        "syntax-error",
+        "expr",
+        "for",
+        "with",
+        "list-comprehension",
+        "set-comprehension",
+        "dict-comprehension",
+        "gen-expression",
+        "func-def-with--default-value",
+        "async-func-def-with-default-value",
+        "decorator-at-func",
+        "decorator-at-async-func",
+        "func-with-async-body",
+        "async-func-with-async-body",
+        "async-func",
+        "class-def",
+    ],
+)
+def test_is_not_async_code(expr):
+    assert not is_async_code(expr)
 
 
 @mark.parametrize(
