@@ -4,7 +4,7 @@ import sys
 import textwrap
 import types
 from itertools import takewhile
-from typing import Any, Optional, Union
+from typing import Any, Iterable, Optional, Union, cast
 
 try:
     from _pydevd_bundle.pydevd_save_locals import save_locals
@@ -128,6 +128,18 @@ class _AsyncNodeFound(Exception):
 
 
 class _AsyncCodeVisitor(ast.NodeVisitor):
+    @classmethod
+    def check(cls, code: str) -> bool:
+        try:
+            node = _parse_code(code)
+        except SyntaxError:
+            return False
+
+        try:
+            return bool(cls().visit(node))
+        except _AsyncNodeFound:
+            return True
+
     def _ignore(self, _: ast.AST) -> Any:
         return
 
@@ -164,16 +176,20 @@ class _AsyncCodeVisitor(ast.NodeVisitor):
     visit_DictComp = _visit_gen
 
 
-def is_async_code(code: str) -> bool:
-    try:
-        module = ast.parse(code)
-    except SyntaxError:
-        return False
+if sys.version_info < (3, 7):
 
-    try:
-        return bool(_AsyncCodeVisitor().visit(module))
-    except _AsyncNodeFound:
-        return True
+    def _parse_code(code: str) -> ast.AST:
+        code = f"async def _():\n{textwrap.indent(code, '    ')}"
+        func, *_ = cast(Iterable[ast.AsyncFunctionDef], ast.parse(code).body)
+        return ast.Module(func.body)
+
+
+else:
+    _parse_code = ast.parse
+
+
+def is_async_code(code: str) -> bool:
+    return _AsyncCodeVisitor.check(code)
 
 
 sys.__async_eval__ = async_eval  # type: ignore
