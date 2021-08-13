@@ -7,7 +7,11 @@ from typing import Any, Callable
 try:
     from nest_asyncio import _patch_loop, apply
 except ImportError:  # pragma: no cover
-    pass
+
+    def _noop(*args: Any, **kwargs: Any) -> None:
+        pass
+
+    _patch_loop = apply = _noop
 
 
 def _is_async_debug_available(loop: Any = None) -> bool:
@@ -17,7 +21,10 @@ def _is_async_debug_available(loop: Any = None) -> bool:
     return bool(loop.__class__.__module__.lstrip("_").startswith("asyncio"))
 
 
-def _patch_asyncio_set_get_new() -> None:
+def _patch_asyncio() -> None:
+    if hasattr(sys, "__async_eval_patched__"):  # pragma: no cover
+        return
+
     if not _is_async_debug_available():
         return
 
@@ -53,6 +60,9 @@ def _patch_asyncio_set_get_new() -> None:
         _set_event_loop(loop)
 
     asyncio.set_event_loop = set_loop_wrapper  # type: ignore
+    sys.__async_eval_patched__ = True  # type: ignore
 
 
-_patch_asyncio_set_get_new()
+_patch_asyncio()
+
+__all__ = ["_patch_asyncio"]
