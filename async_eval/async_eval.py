@@ -93,7 +93,7 @@ def _make_stmt_as_return(parent: ASTWithBody, root: ast.AST) -> types.CodeType:
 
     try:
         return _compile_ast(root)
-    except (SyntaxError, TypeError):
+    except (SyntaxError, TypeError):  # pragma: no cover  # TODO: found case to cover except body
         parent.body[-1] = node
         return _compile_ast(root)
 
