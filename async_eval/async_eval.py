@@ -3,7 +3,6 @@ import inspect
 import sys
 import textwrap
 import types
-from itertools import takewhile
 from typing import Any, Iterable, Optional, Union, cast
 
 try:
@@ -24,7 +23,7 @@ async def __async_exec_func__():
     global __locals__
     locals().update(__locals__)
     try:
-{}
+        pass
     finally:
         __locals__.update(locals())
 
@@ -67,60 +66,52 @@ finally:
 """
 )
 
+if sys.version_info < (3, 7):
 
-def _transform_to_async(expr: str) -> str:
-    code = textwrap.indent(expr, " " * 8)
-    code_without_return = _ASYNC_EVAL_CODE_TEMPLATE.format(code)
+    def _parse_code(code: str) -> ast.AST:
+        code = f"async def _():\n{textwrap.indent(code, '    ')}"
+        func, *_ = cast(Iterable[ast.AsyncFunctionDef], ast.parse(code).body)
+        return ast.Module(func.body)
 
-    node = ast.parse(code_without_return)
-    last_node = node.body[1].body[2].body[-1]  # type: ignore
 
-    if isinstance(
-        last_node,
-        (
-            ast.AsyncFor,
-            ast.For,
-            ast.Try,
-            ast.If,
-            ast.While,
-            ast.ClassDef,
-            ast.FunctionDef,
-            ast.AsyncFunctionDef,
-        ),
-    ):
-        return code_without_return
+else:
+    _parse_code = ast.parse
 
-    *others, last = code.splitlines(keepends=False)
 
-    indent = sum(1 for _ in takewhile(str.isspace, last))
-    last = " " * indent + f"return {last.lstrip()}"
+def _compile_ast(node: ast.AST, filename: str = "<eval>", mode: str = "exec") -> types.CodeType:
+    return cast(types.CodeType, compile(node, filename, mode))
 
-    code_with_return = _ASYNC_EVAL_CODE_TEMPLATE.format("\n".join([*others, last]))
+
+ASTWithBody = Union[ast.Module, ast.With, ast.AsyncWith]
+
+
+def _make_stmt_as_return(parent: ASTWithBody, root: ast.AST) -> types.CodeType:
+    node = parent.body[-1]
+
+    if isinstance(node, ast.Expr):
+        parent.body[-1] = ast.copy_location(ast.Return(node.value), node)
 
     try:
-        compile(code_with_return, "<exec>", "exec")
-        return code_with_return
-    except SyntaxError:
-        return code_without_return
+        return _compile_ast(root)
+    except (SyntaxError, TypeError):
+        parent.body[-1] = node
+        return _compile_ast(root)
 
 
-# async equivalent of builtin eval function
-def async_eval(expr: str, _globals: Optional[dict] = None, _locals: Optional[dict] = None) -> Any:
-    caller: types.FrameType = inspect.currentframe().f_back  # type: ignore
+def _transform_to_async(code: str) -> types.CodeType:
+    base: ast.Module = ast.parse(_ASYNC_EVAL_CODE_TEMPLATE)
+    module: ast.Module = cast(ast.Module, _parse_code(code))
 
-    if _locals is None:
-        _locals = caller.f_locals
+    func: ast.AsyncFunctionDef = cast(ast.AsyncFunctionDef, base.body[1])
+    try_stmt: ast.Try = cast(ast.Try, func.body[-1])
 
-    if _globals is None:
-        _globals = caller.f_globals
+    try_stmt.body = module.body
 
-    code = _transform_to_async(expr)
+    parent: ASTWithBody = module
+    while isinstance(parent.body[-1], (ast.AsyncWith, ast.With)):
+        parent = cast(ASTWithBody, parent.body[-1])
 
-    try:
-        exec(code, _globals, _locals)
-        return _locals.pop("__async_exec_func_result__")
-    finally:
-        save_locals(caller)
+    return _make_stmt_as_return(parent, base)
 
 
 class _AsyncNodeFound(Exception):
@@ -176,20 +167,27 @@ class _AsyncCodeVisitor(ast.NodeVisitor):
     visit_DictComp = _visit_gen
 
 
-if sys.version_info < (3, 7):
-
-    def _parse_code(code: str) -> ast.AST:
-        code = f"async def _():\n{textwrap.indent(code, '    ')}"
-        func, *_ = cast(Iterable[ast.AsyncFunctionDef], ast.parse(code).body)
-        return ast.Module(func.body)
-
-
-else:
-    _parse_code = ast.parse
-
-
 def is_async_code(code: str) -> bool:
     return _AsyncCodeVisitor.check(code)
+
+
+# async equivalent of builtin eval function
+def async_eval(code: str, _globals: Optional[dict] = None, _locals: Optional[dict] = None) -> Any:
+    caller: types.FrameType = inspect.currentframe().f_back  # type: ignore
+
+    if _locals is None:
+        _locals = caller.f_locals
+
+    if _globals is None:
+        _globals = caller.f_globals
+
+    code_obj = _transform_to_async(code)
+
+    try:
+        exec(code_obj, _globals, _locals)
+        return _locals.pop("__async_exec_func_result__")
+    finally:
+        save_locals(caller)
 
 
 sys.__async_eval__ = async_eval  # type: ignore
