@@ -1,17 +1,21 @@
 import asyncio
 from typing import Any
 
-try:
-    _ = _is_async_debug_available  # noqa  # only for testing purposes
-except NameError:
+try:  # pragma: no cover
+    # only for testing purposes
+    _ = is_async_debug_available  # noqa
+    _ = is_async_code  # type: ignore  # noqa
+except NameError:  # pragma: no cover
+    try:
+        from async_eval.async_eval import is_async_code
+        from async_eval.asyncio_patch import is_async_debug_available
+    except ImportError:
 
-    def _is_async_debug_available(_: Any = None) -> bool:
-        return True
+        def _noop(*args: Any, **kwargs: Any) -> Any:
+            return True
 
-
-def is_async_code(code: str) -> bool:
-    # TODO: use node visitor to check if code contains async/await
-    return "__async_eval__" not in code and ("await" in code or "async" in code)
+        is_async_code = _noop
+        is_async_debug_available = _noop
 
 
 def make_code_async(code: str) -> str:
@@ -30,7 +34,7 @@ original_evaluate = pydevd_vars.evaluate_expression
 
 def evaluate_expression(thread_id: object, frame_id: object, expression: str, doExec: bool) -> Any:
     if is_async_code(expression):
-        if not _is_async_debug_available():
+        if not is_async_debug_available():
             cls = asyncio.get_event_loop().__class__
 
             raise RuntimeError(
@@ -78,7 +82,6 @@ for obj in gc.get_objects():  # pragma: no cover
     if isinstance(obj, LineBreakpoint):
         normalize_line_breakpoint(obj)
 
-
 # 3. Add ability to use async code in console
 from _pydevd_bundle import pydevd_console_integration
 
@@ -103,3 +106,9 @@ def command_run(self: Command) -> None:
 
 
 Command.run = command_run
+
+import sys
+from runpy import run_path
+
+if __name__ == "__main__":  # pragma: no cover
+    run_path(sys.argv.pop(1), {}, "__main__")  # pragma: no cover

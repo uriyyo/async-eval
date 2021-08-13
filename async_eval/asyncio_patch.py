@@ -14,18 +14,18 @@ except ImportError:  # pragma: no cover
     _patch_loop = apply = _noop
 
 
-def _is_async_debug_available(loop: Any = None) -> bool:
+def is_async_debug_available(loop: Any = None) -> bool:
     if loop is None:
         loop = asyncio.get_event_loop()
 
     return bool(loop.__class__.__module__.lstrip("_").startswith("asyncio"))
 
 
-def _patch_asyncio() -> None:
+def patch_asyncio() -> None:
     if hasattr(sys, "__async_eval_patched__"):  # pragma: no cover
         return
 
-    if not _is_async_debug_available():
+    if not is_async_debug_available():  # pragma: no cover
         return
 
     if sys.platform.lower().startswith("win"):
@@ -37,7 +37,7 @@ def _patch_asyncio() -> None:
     apply()
 
     def _patch_loop_if_not_patched(loop: AbstractEventLoop) -> None:
-        if not hasattr(loop, "_nest_patched") and _is_async_debug_available(loop):
+        if not hasattr(loop, "_nest_patched") and is_async_debug_available(loop):
             _patch_loop(loop)
 
     def _patch_asyncio_api(func: Callable) -> Callable:
@@ -63,6 +63,6 @@ def _patch_asyncio() -> None:
     sys.__async_eval_patched__ = True  # type: ignore
 
 
-_patch_asyncio()
+patch_asyncio()
 
-__all__ = ["_patch_asyncio"]
+__all__ = ["patch_asyncio", "is_async_debug_available"]

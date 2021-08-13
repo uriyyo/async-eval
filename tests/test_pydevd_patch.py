@@ -32,7 +32,7 @@ def test_evaluate_expression(mocker, code, result):
     mock_eval: MagicMock = mocker.patch("_pydevd_bundle.pydevd_vars.evaluate_expression")
     mock_find_frame: MagicMock = mocker.patch("_pydevd_bundle.pydevd_vars.find_frame")
 
-    from async_eval import pydevd_patch  # noqa # isort:skip
+    from async_eval.ext.pydevd import code as _  # noqa # isort:skip
     from _pydevd_bundle.pydevd_vars import evaluate_expression  # isort:skip
 
     thread_id, frame_id = object(), object()
@@ -46,7 +46,7 @@ def test_evaluate_expression(mocker, code, result):
 
 @params_mark
 def test_line_breakpoint(code, result):
-    from async_eval import pydevd_patch  # noqa # isort:skip
+    from async_eval.ext.pydevd import code as _  # noqa # isort:skip
     from _pydevd_bundle.pydevd_breakpoints import LineBreakpoint
 
     line = LineBreakpoint(line=0, func_name="test", condition=code, expression=code)
@@ -59,7 +59,7 @@ def test_line_breakpoint(code, result):
 def test_console_integration(mocker, code, result):
     mock = mocker.patch("_pydevd_bundle.pydevd_console_integration.console_exec")
 
-    from async_eval.pydevd_patch import console_exec
+    from async_eval.ext.pydevd.code import console_exec
 
     thread_id, frame_id, dbg = object(), object(), object()
 
@@ -91,24 +91,9 @@ def test_command_run(mocker, code, result):
 
 @params_mark
 def test_make_code_async(code, result):
-    from async_eval.pydevd_patch import make_code_async
+    from async_eval.ext.pydevd.code import make_code_async
 
     assert make_code_async(code) == result
-
-
-@mark.parametrize(
-    "code,result",
-    [
-        ("await foo()", True),
-        ("[i async for i in range(10)]", True),
-        ("foo()", False),
-        ("__import__('sys').__async_eval__('await foo()')", False),
-    ],
-)
-def test_is_code_async(code, result):
-    from async_eval.pydevd_patch import is_async_code
-
-    assert is_async_code(code) == result
 
 
 # issue #6
@@ -121,7 +106,7 @@ def test_evaluate_expression_should_update_locals(mocker):
 
     mocker.patch("_pydevd_bundle.pydevd_vars.find_frame", return_value=g.gi_frame)
 
-    from async_eval.pydevd_patch import evaluate_expression
+    from async_eval.ext.pydevd.code import evaluate_expression
 
     evaluate_expression(
         object(),
@@ -135,9 +120,9 @@ def test_evaluate_expression_should_update_locals(mocker):
 
 
 def test_async_evaluate_is_not_available_for_eventloop(mocker):
-    mocker.patch("async_eval.pydevd_patch._is_async_debug_available", return_value=False)
+    mocker.patch("async_eval.ext.pydevd.code.is_async_debug_available", return_value=False)
 
-    from async_eval.pydevd_patch import evaluate_expression
+    from async_eval.ext.pydevd.code import evaluate_expression
 
     with raises(
         RuntimeError,
@@ -150,3 +135,13 @@ def test_async_evaluate_is_not_available_for_eventloop(mocker):
             "await regular()",
             True,
         )
+
+
+def test_pydevd_integration():
+    from async_eval.ext.pydevd import generate_main_script
+
+    src = generate_main_script()
+
+    _globals = _locals = {}
+
+    exec(src, _globals, _locals)

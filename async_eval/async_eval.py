@@ -152,7 +152,7 @@ class _AsyncCodeVisitor(ast.NodeVisitor):
     visit_AsyncFunctionDef = _visit_func
     visit_FunctionDef = _visit_func
 
-    # no need to check function/class definitions
+    # no need to check class definitions
     visit_ClassDef = _ignore  # type: ignore
 
     # basic async statements
