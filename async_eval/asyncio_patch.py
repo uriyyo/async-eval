@@ -10,7 +10,17 @@ except ImportError:  # pragma: no cover
     pass
 
 
+def _is_async_debug_available(loop: Any = None) -> bool:
+    if loop is None:
+        loop = asyncio.get_event_loop()
+
+    return bool(loop.__class__.__module__.lstrip("_").startswith("asyncio"))
+
+
 def _patch_asyncio_set_get_new() -> None:
+    if not _is_async_debug_available():
+        return
+
     if sys.platform.lower().startswith("win"):
         try:
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type: ignore
@@ -20,7 +30,7 @@ def _patch_asyncio_set_get_new() -> None:
     apply()
 
     def _patch_loop_if_not_patched(loop: AbstractEventLoop) -> None:
-        if not hasattr(loop, "_nest_patched"):
+        if not hasattr(loop, "_nest_patched") and _is_async_debug_available(loop):
             _patch_loop(loop)
 
     def _patch_asyncio_api(func: Callable) -> Callable:
