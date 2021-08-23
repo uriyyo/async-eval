@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U poetry
-          poetry install
+          poetry install -E all
 
       - name: Unit tests
         run: poetry run pytest tests --cov-report=xml

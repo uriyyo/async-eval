@@ -1,6 +1,11 @@
 import asyncio
 from typing import Any
 
+
+def _noop(*args: Any, **kwargs: Any) -> Any:  # pragma: no cover
+    return True
+
+
 try:  # pragma: no cover
     # only for testing purposes
     _ = is_async_debug_available  # noqa
@@ -11,11 +16,34 @@ except NameError:  # pragma: no cover
         from async_eval.asyncio_patch import is_async_debug_available
     except ImportError:
 
-        def _noop(*args: Any, **kwargs: Any) -> Any:
-            return True
-
         is_async_code = _noop
         is_async_debug_available = _noop
+
+try:
+    from trio._core._run import GLOBAL_RUN_CONTEXT
+
+    def is_trio_running() -> bool:
+        return hasattr(GLOBAL_RUN_CONTEXT, "runner")
+
+
+except ImportError:  # pragma: no cover
+    is_trio_running = _noop
+
+
+def verify_async_debug_available() -> None:
+    if is_trio_running():
+        raise RuntimeError(
+            "Can not evaluate async code with trio event loop. "
+            "Only native asyncio event loop can be used for async code evaluating."
+        )
+
+    if not is_async_debug_available():
+        cls = asyncio.get_event_loop().__class__
+
+        raise RuntimeError(
+            f"Can not evaluate async code with event loop {cls.__module__}.{cls.__qualname__}. "
+            "Only native asyncio event loop can be used for async code evaluating."
+        )
 
 
 def make_code_async(code: str) -> str:
@@ -34,14 +62,7 @@ original_evaluate = pydevd_vars.evaluate_expression
 
 def evaluate_expression(thread_id: object, frame_id: object, expression: str, doExec: bool) -> Any:
     if is_async_code(expression):
-        if not is_async_debug_available():
-            cls = asyncio.get_event_loop().__class__
-
-            raise RuntimeError(
-                f"Can not evaluate async code with event loop {cls.__module__}.{cls.__qualname__}. "
-                "Only native asyncio event loop can be used for async code evaluating."
-            )
-
+        verify_async_debug_available()
         doExec = False
 
     try:

@@ -8,7 +8,8 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.6.1"
 nest-asyncio = "^1.5.1"
-pydevd-pycharm = "^212.5080.18"
+pydevd-pycharm = { version = "^212.5080.18", optional = true }
+trio = { version = "^0.19.0", optional = true }
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
@@ -16,6 +17,11 @@ pytest-asyncio = "^0.15.1"
 pytest-cov = "^2.12.1"
 pytest-mock = "^3.6.1"
 pre-commit = "^2.14.0"
+
+[tool.poetry.extras]
+pydevd-pycharm = ["pydevd-pycharm"]
+trio = ["trio"]
+all = ["pydevd-pycharm", "trio"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

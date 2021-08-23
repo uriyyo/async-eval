@@ -137,6 +137,24 @@ def test_async_evaluate_is_not_available_for_eventloop(mocker):
         )
 
 
+def test_async_evaluate_is_not_available_for_trio(mocker):
+    mocker.patch("async_eval.ext.pydevd.code.is_trio_running", return_value=True)
+
+    from async_eval.ext.pydevd.code import evaluate_expression
+
+    with raises(
+        RuntimeError,
+        match=r"^Can not evaluate async code with trio event loop. "
+        r"Only native asyncio event loop can be used for async code evaluating.$",
+    ):
+        evaluate_expression(
+            object(),
+            object(),
+            "await regular()",
+            True,
+        )
+
+
 def test_pydevd_integration():
     from async_eval.ext.pydevd import generate_main_script
 

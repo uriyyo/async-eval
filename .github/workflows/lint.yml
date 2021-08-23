@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U poetry
-          poetry install
+          poetry install -E all
 
       - name: Lint
         run: |
