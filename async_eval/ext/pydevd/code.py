@@ -47,9 +47,13 @@ def verify_async_debug_available() -> None:
 
 
 def make_code_async(code: str) -> str:
-    if code and is_async_code(code):
-        code = code.replace("@" + "LINE" + "@", "\n")
-        return f"__import__('sys').__async_eval__({code!r}, globals(), locals())"
+    if not code:
+        return code
+
+    original_code = code.replace("@" + "LINE" + "@", "\n")
+
+    if is_async_code(original_code):
+        return f"__import__('sys').__async_eval__({original_code!r}, globals(), locals())"
 
     return code
 

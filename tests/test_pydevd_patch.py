@@ -20,6 +20,7 @@ def _clear_modules():
 params_mark = mark.parametrize(
     "code,result",
     [
+        ("",) * 2,
         ("foo()",) * 2,
         (_as_async("await foo()"),) * 2,
         ("await foo()", _as_async("await foo()")),
