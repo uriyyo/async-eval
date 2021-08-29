@@ -139,7 +139,7 @@ def test_async_evaluate_is_not_available_for_eventloop(mocker):
 
 
 def test_async_evaluate_is_not_available_for_trio(mocker):
-    mocker.patch("async_eval.ext.pydevd.code.is_trio_running", return_value=True)
+    mocker.patch("async_eval.ext.pydevd.code.is_trio_not_running", return_value=False)
 
     from async_eval.ext.pydevd.code import evaluate_expression
 
