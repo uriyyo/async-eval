@@ -281,7 +281,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "pydevd-pycharm"
-version = "212.5080.64"
+version = "212.5284.18"
 description = "PyCharm Debugger (used in PyCharm and PyDev)"
 category = "main"
 optional = true
@@ -696,7 +696,7 @@ pycparser = [
     {file = "pycparser-2.20.tar.gz", hash = "sha256:2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0"},
 ]
 pydevd-pycharm = [
-    {file = "pydevd-pycharm-212.5080.64.tar.gz", hash = "sha256:29b11bf59b5443858020aba575e9fba0891b63f7318d23ef656c379dc1c698b9"},
+    {file = "pydevd-pycharm-212.5284.18.tar.gz", hash = "sha256:c195d124e0f6bcbf05d8944a9df0666612d51205c5c369fe3f3fbdc6828a40c8"},
 ]
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
