@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover
 
 try:
     _ = apply  # noqa
-except NameError:
+except NameError:  # pragma: no cover
     try:
         from nest_asyncio import apply
     except ImportError:

@@ -4,7 +4,7 @@ import sys
 from asyncio import AbstractEventLoop
 from typing import Any, Callable
 
-try:
+try:  # pragma: no cover
     _ = _patch_loop  # noqa
     _ = apply  # noqa
 except NameError:
