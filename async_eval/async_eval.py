@@ -15,6 +15,17 @@ except ImportError:  # pragma: no cover
         ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame), ctypes.c_int(1))
 
 
+try:
+    _ = apply  # noqa
+except NameError:
+    try:
+        from nest_asyncio import apply
+    except ImportError:
+
+        def apply(_: Any = None) -> None:
+            pass
+
+
 _ASYNC_EVAL_CODE_TEMPLATE = textwrap.dedent(
     """\
 __locals__ = locals()
@@ -173,6 +184,8 @@ def is_async_code(code: str) -> bool:
 
 # async equivalent of builtin eval function
 def async_eval(code: str, _globals: Optional[dict] = None, _locals: Optional[dict] = None) -> Any:
+    apply()  # double check that loop is patched
+
     caller: types.FrameType = inspect.currentframe().f_back  # type: ignore
 
     if _locals is None:
