@@ -25,7 +25,6 @@ try:
     def is_trio_not_running() -> bool:
         return not hasattr(GLOBAL_RUN_CONTEXT, "runner")
 
-
 except ImportError:  # pragma: no cover
     is_trio_not_running = _noop
 

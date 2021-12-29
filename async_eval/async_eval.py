@@ -84,7 +84,6 @@ if sys.version_info < (3, 7):
         func, *_ = cast(Iterable[ast.AsyncFunctionDef], ast.parse(code).body)
         return ast.Module(func.body)
 
-
 else:
     _parse_code = ast.parse
 

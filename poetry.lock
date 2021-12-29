@@ -481,7 +481,7 @@ trio = ["trio"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "dd7d1e0324a7189b9d5d9550bb5433db015bb1a82f422d2abc16bda52fe17a61"
+content-hash = "036e800b64011f5a1d26b9789bbdc5ee3625f2323e567efeaaccfc24c59e3548"
 
 [metadata.files]
 async-generator = [
