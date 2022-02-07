@@ -14,7 +14,7 @@ pydevd-pycharm = { version = ">=212.5080.18,<222.0.0", optional = true }
 trio = { version = "^0.19.0", optional = true }
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.5"
+pytest = "^7.0.0"
 pytest-asyncio = "^0.16.0"
 pytest-cov = "^3.0.0"
 pytest-mock = "^3.6.1"
