@@ -1,12 +1,19 @@
+import inspect
 from asyncio import AbstractEventLoop
 from multiprocessing import Process
 from typing import Callable
 
 import nest_asyncio
-from pytest import fixture
+from pytest import Function, fixture
 
 # issue #7
 nest_asyncio._patch_handle = lambda: None
+
+
+def pytest_collection_modifyitems(items) -> None:
+    for item in items:
+        if isinstance(item, Function) and inspect.iscoroutinefunction(item.obj):
+            item.add_marker("asyncio")
 
 
 @fixture
