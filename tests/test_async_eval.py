@@ -18,9 +18,6 @@ except ImportError:
     contextvars = None
 
 
-pytestmark = mark.asyncio
-
-
 @mark.parametrize(
     "expr",
     [
