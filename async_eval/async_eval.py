@@ -95,20 +95,20 @@ def _compile_ast(node: ast.AST, filename: str = "<eval>", mode: str = "exec") ->
 ASTWithBody = Union[ast.Module, ast.With, ast.AsyncWith]
 
 
-def _make_stmt_as_return(parent: ASTWithBody, root: ast.AST) -> types.CodeType:
+def _make_stmt_as_return(parent: ASTWithBody, root: ast.AST, filename: str) -> types.CodeType:
     node = parent.body[-1]
 
     if isinstance(node, ast.Expr):
         parent.body[-1] = ast.copy_location(ast.Return(node.value), node)
 
     try:
-        return _compile_ast(root)
+        return _compile_ast(root, filename)
     except (SyntaxError, TypeError):  # pragma: no cover  # TODO: found case to cover except body
         parent.body[-1] = node
-        return _compile_ast(root)
+        return _compile_ast(root, filename)
 
 
-def _transform_to_async(code: str) -> types.CodeType:
+def _transform_to_async(code: str, filename: str) -> types.CodeType:
     base: ast.Module = ast.parse(_ASYNC_EVAL_CODE_TEMPLATE)
     module: ast.Module = cast(ast.Module, _parse_code(code))
 
@@ -121,7 +121,7 @@ def _transform_to_async(code: str) -> types.CodeType:
     while isinstance(parent.body[-1], (ast.AsyncWith, ast.With)):
         parent = cast(ASTWithBody, parent.body[-1])
 
-    return _make_stmt_as_return(parent, base)
+    return _make_stmt_as_return(parent, base, filename)
 
 
 class _AsyncNodeFound(Exception):
@@ -182,7 +182,13 @@ def is_async_code(code: str) -> bool:
 
 
 # async equivalent of builtin eval function
-def async_eval(code: str, _globals: Optional[dict] = None, _locals: Optional[dict] = None) -> Any:
+def async_eval(
+    code: str,
+    _globals: Optional[dict] = None,
+    _locals: Optional[dict] = None,
+    *,
+    filename: str = "<eval>",
+) -> Any:
     apply()  # double check that loop is patched
 
     caller: types.FrameType = inspect.currentframe().f_back  # type: ignore
@@ -193,7 +199,7 @@ def async_eval(code: str, _globals: Optional[dict] = None, _locals: Optional[dic
     if _globals is None:
         _globals = caller.f_globals
 
-    code_obj = _transform_to_async(code)
+    code_obj = _transform_to_async(code, filename)
 
     try:
         exec(code_obj, _globals, _locals)
