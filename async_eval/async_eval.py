@@ -15,15 +15,25 @@ except ImportError:  # pragma: no cover
         ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame), ctypes.c_int(1))
 
 
+def _noop(*_: Any, **__: Any) -> Any:  # pragma: no cover
+    return None
+
+
+try:
+    _ = verify_async_debug_available  # noqa
+except NameError:  # pragma: no cover
+    try:
+        from async_eval.asyncio_patch import verify_async_debug_available
+    except ImportError:
+        verify_async_debug_available = _noop
+
 try:
     _ = apply  # noqa
 except NameError:  # pragma: no cover
     try:
         from nest_asyncio import apply
     except ImportError:
-
-        def apply(_: Any = None) -> None:
-            pass
+        apply = _noop
 
 
 _ASYNC_EVAL_CODE_TEMPLATE = textwrap.dedent(
@@ -189,6 +199,7 @@ def async_eval(
     *,
     filename: str = "<eval>",
 ) -> Any:
+    verify_async_debug_available()
     apply()  # double check that loop is patched
 
     caller: types.FrameType = inspect.currentframe().f_back  # type: ignore

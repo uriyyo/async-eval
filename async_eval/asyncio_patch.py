@@ -12,10 +12,20 @@ except NameError:
         from nest_asyncio import _patch_loop, apply
     except ImportError:  # pragma: no cover
 
-        def _noop(*args: Any, **kwargs: Any) -> None:
+        def _noop(*_: Any, **__: Any) -> None:
             pass
 
         _patch_loop = apply = _noop
+
+
+try:
+    from trio._core._run import GLOBAL_RUN_CONTEXT
+except ImportError:  # pragma: no cover
+    GLOBAL_RUN_CONTEXT = object()
+
+
+def is_trio_not_running() -> bool:
+    return not hasattr(GLOBAL_RUN_CONTEXT, "runner")
 
 
 def get_current_loop() -> Optional[Any]:  # pragma: no cover
@@ -32,6 +42,22 @@ def is_async_debug_available(loop: Any = None) -> bool:
         loop = get_current_loop()
 
     return bool(loop.__class__.__module__.lstrip("_").startswith("asyncio"))
+
+
+def verify_async_debug_available() -> None:
+    if not is_trio_not_running():
+        raise RuntimeError(
+            "Can not evaluate async code with trio event loop. "
+            "Only native asyncio event loop can be used for async code evaluating."
+        )
+
+    if not is_async_debug_available():
+        cls = get_current_loop().__class__
+
+        raise RuntimeError(
+            f"Can not evaluate async code with event loop {cls.__module__}.{cls.__qualname__}. "
+            "Only native asyncio event loop can be used for async code evaluating."
+        )
 
 
 def patch_asyncio() -> None:
@@ -82,4 +108,5 @@ __all__ = [
     "patch_asyncio",
     "get_current_loop",
     "is_async_debug_available",
+    "verify_async_debug_available",
 ]

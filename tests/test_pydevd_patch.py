@@ -1,7 +1,7 @@
 import sys
 from unittest.mock import MagicMock
 
-from pytest import fixture, mark, raises
+from pytest import fixture, mark
 
 from .utils import ctxmanager, regular  # noqa
 
@@ -118,42 +118,6 @@ def test_evaluate_expression_should_update_locals(mocker):
 
     assert "f" in g.gi_frame.f_locals
     assert g.gi_frame.f_locals["f"] == 10
-
-
-def test_async_evaluate_is_not_available_for_eventloop(mocker):
-    mocker.patch("async_eval.ext.pydevd.code.is_async_debug_available", return_value=False)
-
-    from async_eval.ext.pydevd.code import evaluate_expression
-
-    with raises(
-        RuntimeError,
-        match=r"^Can not evaluate async code with event loop .*\. "
-        r"Only native asyncio event loop can be used for async code evaluating.$",
-    ):
-        evaluate_expression(
-            object(),
-            object(),
-            "await regular()",
-            True,
-        )
-
-
-def test_async_evaluate_is_not_available_for_trio(mocker):
-    mocker.patch("async_eval.ext.pydevd.code.is_trio_not_running", return_value=False)
-
-    from async_eval.ext.pydevd.code import evaluate_expression
-
-    with raises(
-        RuntimeError,
-        match=r"^Can not evaluate async code with trio event loop. "
-        r"Only native asyncio event loop can be used for async code evaluating.$",
-    ):
-        evaluate_expression(
-            object(),
-            object(),
-            "await regular()",
-            True,
-        )
 
 
 def test_pydevd_integration():
