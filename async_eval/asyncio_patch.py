@@ -2,7 +2,7 @@ import asyncio
 import functools
 import sys
 from asyncio import AbstractEventLoop
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 try:  # pragma: no cover
     _ = _patch_loop  # noqa
@@ -18,9 +18,18 @@ except NameError:
         _patch_loop = apply = _noop
 
 
+def get_current_loop() -> Optional[Any]:  # pragma: no cover
+    try:
+        return asyncio.get_running_loop()  # type: ignore
+    except RuntimeError:
+        return asyncio.new_event_loop()
+    except AttributeError:  # Only for 3.6 case, can be removed in future
+        return asyncio.get_event_loop()
+
+
 def is_async_debug_available(loop: Any = None) -> bool:
     if loop is None:
-        loop = asyncio.get_event_loop()
+        loop = get_current_loop()
 
     return bool(loop.__class__.__module__.lstrip("_").startswith("asyncio"))
 
@@ -69,4 +78,8 @@ def patch_asyncio() -> None:
 
 patch_asyncio()
 
-__all__ = ["patch_asyncio", "is_async_debug_available"]
+__all__ = [
+    "patch_asyncio",
+    "get_current_loop",
+    "is_async_debug_available",
+]

@@ -1,8 +1,8 @@
-import asyncio
+from functools import partial
 from typing import Any
 
 
-def _noop(*args: Any, **kwargs: Any) -> Any:  # pragma: no cover
+def _noop(*_: Any, __return__: Any = True, **__: Any) -> Any:  # pragma: no cover
     return True
 
 
@@ -10,14 +10,19 @@ try:  # pragma: no cover
     # only for testing purposes
     _ = is_async_debug_available  # noqa
     _ = is_async_code  # type: ignore  # noqa
+    _ = get_current_loop  # type: ignore  # noqa
 except NameError:  # pragma: no cover
     try:
         from async_eval.async_eval import is_async_code
-        from async_eval.asyncio_patch import is_async_debug_available
+        from async_eval.asyncio_patch import (
+            get_current_loop,
+            is_async_debug_available,
+        )
     except ImportError:
 
         is_async_code = _noop
         is_async_debug_available = _noop
+        get_current_loop = partial(_noop, __return__=None)
 
 try:
     from trio._core._run import GLOBAL_RUN_CONTEXT
@@ -37,7 +42,7 @@ def verify_async_debug_available() -> None:
         )
 
     if not is_async_debug_available():
-        cls = asyncio.get_event_loop().__class__
+        cls = get_current_loop().__class__
 
         raise RuntimeError(
             f"Can not evaluate async code with event loop {cls.__module__}.{cls.__qualname__}. "
