@@ -10,8 +10,8 @@ repository = "https://github.com/uriyyo/async-eval"
 [tool.poetry.dependencies]
 python = "^3.7"
 nest-asyncio = "^1.5.5"
-pydevd-pycharm = "^222.2889.11"
-trio = "^0.21.0"
+pydevd-pycharm = { version = "^222.3739.30", optional = true }
+trio = { version = "^0.21.0", optional = true }
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
