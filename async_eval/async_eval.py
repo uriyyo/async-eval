@@ -79,11 +79,6 @@ finally:
     del __ctx__
     del __locals__
     del __async_exec_func__
-
-    try:
-        del __builtins__
-    except NameError:
-        pass
 """
 )
 

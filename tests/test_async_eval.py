@@ -159,11 +159,13 @@ async def test_eval_raise_exc():
         async_eval("await raise_exc()")
 
 
-async def test_async_eval_dont_leak_internal_vars():
-    _globals = _locals = {}
+async def test_async_eval_dont_leak_internal_vars(mocker):
+    _globals = {}
+    _locals = {}
+
     async_eval("10", _globals, _locals)
 
-    assert not _globals
+    assert _globals == {"__builtins__": mocker.ANY}
     assert not _locals
 
 
