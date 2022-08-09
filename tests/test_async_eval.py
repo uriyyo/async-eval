@@ -1,3 +1,4 @@
+import contextvars
 import textwrap
 
 from pytest import fixture, mark, raises
@@ -11,11 +12,6 @@ from .utils import (  # noqa  # isort:skip
     raise_exc,
     regular,
 )
-
-try:
-    import contextvars
-except ImportError:
-    contextvars = None
 
 
 @mark.parametrize(
@@ -169,14 +165,9 @@ async def test_async_eval_dont_leak_internal_vars(mocker):
     assert not _locals
 
 
-if contextvars:
-    ctx_var = contextvars.ContextVar("ctx_var")
+ctx_var = contextvars.ContextVar("ctx_var")
 
 
-@mark.skipif(
-    contextvars is None,
-    reason="contextvars is not available",
-)
 class TestContextVars:
     @fixture(autouse=True)
     def reset_var(self):

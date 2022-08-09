@@ -3,7 +3,7 @@ import inspect
 import sys
 import textwrap
 import types
-from typing import Any, Iterable, Optional, Union, cast
+from typing import Any, Optional, Union, cast
 
 try:
     from _pydevd_bundle.pydevd_save_locals import save_locals
@@ -65,7 +65,7 @@ except ImportError:
     pass
 
 try:
-    __async_exec_func_result__ = __import__('asyncio').get_event_loop().run_until_complete(__async_exec_func__())
+    __async_exec_func_result__ = __import__('asyncio').run(__async_exec_func__())
 finally:
     if __ctx__ is not None:
         for var in __ctx__:
@@ -81,16 +81,6 @@ finally:
     del __async_exec_func__
 """
 )
-
-if sys.version_info < (3, 7):
-
-    def _parse_code(code: str) -> ast.AST:
-        code = f"async def _():\n{textwrap.indent(code, '    ')}"
-        func, *_ = cast(Iterable[ast.AsyncFunctionDef], ast.parse(code).body)
-        return ast.Module(func.body)
-
-else:
-    _parse_code = ast.parse
 
 
 def _compile_ast(node: ast.AST, filename: str = "<eval>", mode: str = "exec") -> types.CodeType:
@@ -114,8 +104,8 @@ def _make_stmt_as_return(parent: ASTWithBody, root: ast.AST, filename: str) -> t
 
 
 def _transform_to_async(code: str, filename: str) -> types.CodeType:
-    base: ast.Module = ast.parse(_ASYNC_EVAL_CODE_TEMPLATE)
-    module: ast.Module = cast(ast.Module, _parse_code(code))
+    base = ast.parse(_ASYNC_EVAL_CODE_TEMPLATE)
+    module = ast.parse(code)
 
     func: ast.AsyncFunctionDef = cast(ast.AsyncFunctionDef, base.body[1])
     try_stmt: ast.Try = cast(ast.Try, func.body[-1])
@@ -137,7 +127,7 @@ class _AsyncCodeVisitor(ast.NodeVisitor):
     @classmethod
     def check(cls, code: str) -> bool:
         try:
-            node = _parse_code(code)
+            node = ast.parse(code)
         except SyntaxError:
             return False
 

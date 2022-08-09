@@ -18,13 +18,12 @@ except NameError:
         _patch_loop = apply = _noop
 
 
-try:
-    from trio._core._run import GLOBAL_RUN_CONTEXT
-except ImportError:  # pragma: no cover
-    GLOBAL_RUN_CONTEXT = object()
-
-
 def is_trio_not_running() -> bool:
+    try:
+        from trio._core._run import GLOBAL_RUN_CONTEXT
+    except ImportError:  # pragma: no cover
+        return True
+
     return not hasattr(GLOBAL_RUN_CONTEXT, "runner")
 
 
