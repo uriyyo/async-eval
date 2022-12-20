@@ -29,7 +29,7 @@ def is_trio_not_running() -> bool:
 
 def get_current_loop() -> Optional[Any]:  # pragma: no cover
     try:
-        return asyncio.get_running_loop()  # type: ignore
+        return asyncio.get_running_loop()
     except RuntimeError:
         return asyncio.new_event_loop()
     except AttributeError:  # Only for 3.6 case, can be removed in future
