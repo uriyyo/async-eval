@@ -32,8 +32,6 @@ def get_current_loop() -> Optional[Any]:  # pragma: no cover
         return asyncio.get_running_loop()
     except RuntimeError:
         return asyncio.new_event_loop()
-    except AttributeError:  # Only for 3.6 case, can be removed in future
-        return asyncio.get_event_loop()
 
 
 def is_async_debug_available(loop: Any = None) -> bool:
@@ -65,12 +63,6 @@ def patch_asyncio() -> None:
 
     if not is_async_debug_available():  # pragma: no cover
         return
-
-    if sys.platform.lower().startswith("win"):
-        try:
-            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type: ignore
-        except AttributeError:
-            pass
 
     apply()
 

@@ -1,6 +1,4 @@
-import sys
-from asyncio import AbstractEventLoop, BaseEventLoop, get_event_loop_policy
-from platform import system
+from asyncio import AbstractEventLoop, BaseEventLoop
 
 from pytest import mark, raises
 
@@ -46,24 +44,6 @@ def test_asyncio_patch(run_in_process):
 @mark.skip(reason="Need to find way how to test it")
 def test_asyncio_patch_non_default_loop(run_in_process):
     run_in_process(_test_asyncio_patch_non_default_loop)
-
-
-def _test_windows_asyncio_policy():
-    from async_eval import asyncio_patch  # noqa # isort:skip
-    from asyncio.windows_events import WindowsSelectorEventLoopPolicy  # isort:skip
-
-    assert isinstance(
-        get_event_loop_policy(),
-        WindowsSelectorEventLoopPolicy,
-    )
-
-
-@mark.skipif(
-    not (system().lower() == "windows" and sys.version_info >= (3, 7)),
-    reason="Only for Windows",
-)
-def test_windows_asyncio_policy(run_in_process):
-    run_in_process(_test_windows_asyncio_policy)
 
 
 def test_async_evaluate_is_not_available_for_eventloop(mocker):
