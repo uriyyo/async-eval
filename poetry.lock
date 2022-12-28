@@ -230,7 +230,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "pydevd-pycharm"
-version = "223.4884.74"
+version = "223.8214.51"
 description = "PyCharm Debugger (used in PyCharm and PyDev)"
 category = "main"
 optional = true
@@ -422,7 +422,7 @@ trio = ["trio"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "e551e9ec7db261556ce051c2d18a2b80114df3be48a6defa884ed262e6908d9d"
+content-hash = "83ac38ad12389312fefe2f6089264b4eb8fc7adbb63b806520336d94767fcb22"
 
 [metadata.files]
 async-generator = [
@@ -621,7 +621,7 @@ pycparser = [
     {file = "pycparser-2.21.tar.gz", hash = "sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206"},
 ]
 pydevd-pycharm = [
-    {file = "pydevd-pycharm-223.4884.74.tar.gz", hash = "sha256:3714b0bb4a4d239489107c63ede767c1475e1f869df3170aa74f1d9015e9e7b1"},
+    {file = "pydevd-pycharm-223.8214.51.tar.gz", hash = "sha256:485edbef482c8f123a24561f33810d9fc9feb9990fa2f58bfe5a830b4fe0be92"},
 ]
 pyparsing = [
     {file = "pyparsing-3.0.9-py3-none-any.whl", hash = "sha256:5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc"},
