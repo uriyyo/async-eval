@@ -10,7 +10,7 @@ repository = "https://github.com/uriyyo/async-eval"
 [tool.poetry.dependencies]
 python = "^3.7"
 nest-asyncio = "^1.5.6"
-pydevd-pycharm = { version = "<231.4840.380", optional = true }  # TODO: remove this, when pydevd-pycharm bug will be fixed
+pydevd-pycharm = { version = "<231.6471.4", optional = true }  # TODO: remove this, when pydevd-pycharm bug will be fixed
 trio = { version = ">=0.21,<0.23", optional = true }
 
 [tool.poetry.dev-dependencies]
