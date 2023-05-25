@@ -16,7 +16,7 @@ trio = { version = ">=0.21,<0.23", optional = true }
 [tool.poetry.dev-dependencies]
 pytest = "^7.3.1"
 pytest-asyncio = "^0.21.0"
-pytest-cov = "^4.0.0"
+pytest-cov = "^4.1.0"
 pytest-mock = "^3.10.0"
 pre-commit = "^2.21.0"
 
