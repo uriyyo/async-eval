@@ -3,7 +3,19 @@ import inspect
 import sys
 import textwrap
 import types
-from typing import Any, Optional, Union, cast
+from asyncio.tasks import _enter_task, _leave_task, current_task
+from contextvars import Context
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+    no_type_check,
+)
 
 try:
     from _pydevd_bundle.pydevd_save_locals import save_locals
@@ -19,6 +31,8 @@ def _noop(*_: Any, **__: Any) -> Any:  # pragma: no cover
     return None
 
 
+_: Any
+
 try:
     _ = verify_async_debug_available  # noqa
 except NameError:  # pragma: no cover
@@ -28,57 +42,34 @@ except NameError:  # pragma: no cover
         verify_async_debug_available = _noop
 
 try:
-    _ = apply  # noqa
+    _ = get_current_loop  # noqa
 except NameError:  # pragma: no cover
     try:
-        from nest_asyncio import apply
+        from async_eval.asyncio_patch import get_current_loop
     except ImportError:
-        apply = _noop
+        get_current_loop = _noop
 
 
 _ASYNC_EVAL_CODE_TEMPLATE = textwrap.dedent(
     """\
-__locals__ = locals()
-
-async def __async_exec_func__():
-    global __locals__
-    locals().update(__locals__)
-    try:
-        pass
-    finally:
-        __locals__.update(locals())
-
-__ctx__ = None
-
-try:
-    async def __async_exec_func__(
-        __async_exec_func__=__async_exec_func__,
-        contextvars=__import__('contextvars'),
-    ):
+async def __async_func__(_locals):
+    async def __func_wrapper__(_locals):
+        locals().update(_locals)
         try:
-            return await __async_exec_func__()
-        finally:
-            global __ctx__
-            __ctx__ = contextvars.copy_context()
-
-except ImportError:
-    pass
-
-try:
-    __async_exec_func_result__ = __import__('asyncio').run(__async_exec_func__())
-finally:
-    if __ctx__ is not None:
-        for var in __ctx__:
-            var.set(__ctx__[var])
-
-        try:
-            del var
-        except NameError:
             pass
+        finally:
+            _locals.update(locals())
+            _locals.pop("_locals", None)
 
-    del __ctx__
-    del __locals__
-    del __async_exec_func__
+    from contextvars import copy_context
+
+    try:
+       r = await __func_wrapper__(_locals)
+       is_exc = False
+    except Exception as e:
+        r, is_exc = e, True
+
+    return is_exc, r, copy_context()
 """
 )
 
@@ -107,7 +98,7 @@ def _transform_to_async(code: str, filename: str) -> types.CodeType:
     base = ast.parse(_ASYNC_EVAL_CODE_TEMPLATE)
     module = ast.parse(code)
 
-    func: ast.AsyncFunctionDef = cast(ast.AsyncFunctionDef, base.body[1])
+    func: ast.AsyncFunctionDef = cast(ast.AsyncFunctionDef, cast(ast.AsyncFunctionDef, base.body[0]).body[0])
     try_stmt: ast.Try = cast(ast.Try, func.body[-1])
 
     try_stmt.body = module.body
@@ -117,6 +108,19 @@ def _transform_to_async(code: str, filename: str) -> types.CodeType:
         parent = cast(ASTWithBody, parent.body[-1])
 
     return _make_stmt_as_return(parent, base, filename)
+
+
+def _compile_async_func(
+    code: types.CodeType,
+    _locals: dict,
+    _globals: dict,
+) -> Callable[[dict], Awaitable[Tuple[bool, Any, Context]]]:
+    exec(code, _globals, _locals)
+
+    return cast(
+        Callable[[dict], Awaitable[Tuple[bool, Any, Context]]],
+        _locals.pop("__async_func__"),
+    )
 
 
 class _AsyncNodeFound(Exception):
@@ -176,6 +180,38 @@ def is_async_code(code: str) -> bool:
     return _AsyncCodeVisitor.check(code)
 
 
+T = TypeVar("T")
+
+
+@no_type_check
+def _run_coro(coro: Awaitable[T]) -> T:
+    loop = get_current_loop()
+
+    if not loop.is_running():
+        return loop.run_until_complete(coro)
+
+    current = current_task(loop)
+
+    t = loop.create_task(coro)
+
+    try:
+        if current is not None:
+            _leave_task(loop, current)
+
+        while not t.done():
+            loop._run_once()
+
+        return t.result()
+    finally:
+        if current is not None:
+            _enter_task(loop, current)
+
+
+def _reflect_context(ctx: Context) -> None:
+    for v in ctx:
+        v.set(ctx[v])
+
+
 # async equivalent of builtin eval function
 def async_eval(
     code: str,
@@ -185,7 +221,6 @@ def async_eval(
     filename: str = "<eval>",
 ) -> Any:
     verify_async_debug_available()
-    apply()  # double check that loop is patched
 
     caller: types.FrameType = inspect.currentframe().f_back  # type: ignore
 
@@ -196,10 +231,17 @@ def async_eval(
         _globals = caller.f_globals
 
     code_obj = _transform_to_async(code, filename)
+    func = _compile_async_func(code_obj, _locals, _globals)
 
     try:
-        exec(code_obj, _globals, _locals)
-        return _locals.pop("__async_exec_func_result__")
+        is_exc, result, ctx = _run_coro(func(_locals))
+
+        _reflect_context(ctx)
+
+        if is_exc:
+            raise result
+
+        return result
     finally:
         save_locals(caller)
 
