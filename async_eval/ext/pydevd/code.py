@@ -7,7 +7,7 @@ def _noop(*_: Any, **__: Any) -> Any:  # pragma: no cover
 
 try:  # pragma: no cover
     # only for testing purposes
-    _ = is_async_code  # noqa
+    _ = is_async_code  # type: ignore  # noqa
     _ = verify_async_debug_available  # type: ignore  # noqa
 except NameError:  # pragma: no cover
     try:

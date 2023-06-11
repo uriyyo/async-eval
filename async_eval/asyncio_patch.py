@@ -30,7 +30,7 @@ def verify_async_debug_available() -> None:
     if not is_trio_not_running():
         raise RuntimeError(
             "Can not evaluate async code with trio event loop. "
-            "Only native asyncio event loop can be used for async code evaluating."
+            "Only native asyncio event loop can be used for async code evaluating.",
         )
 
     if not is_async_debug_available():
@@ -38,7 +38,7 @@ def verify_async_debug_available() -> None:
 
         raise RuntimeError(
             f"Can not evaluate async code with event loop {cls.__module__}.{cls.__qualname__}. "
-            "Only native asyncio event loop can be used for async code evaluating."
+            "Only native asyncio event loop can be used for async code evaluating.",
         )
 
 
