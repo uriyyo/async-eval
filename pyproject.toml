@@ -12,17 +12,78 @@ python = "^3.7"
 pydevd-pycharm = { version = "<232.7295.9", optional = true }  # TODO: remove this, when pydevd-pycharm bug will be fixed
 trio = { version = ">=0.21,<0.23", optional = true }
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
 pytest-asyncio = "^0.21.0"
 pytest-cov = "^4.1.0"
 pytest-mock = "^3.10.0"
 pre-commit = "^2.21.0"
+ruff = "^0.0.272"
+black = "^23.3.0"
+mypy = "^1.3.0"
 
 [tool.poetry.extras]
 pydevd-pycharm = ["pydevd-pycharm"]
 trio = ["trio"]
 all = ["pydevd-pycharm", "trio"]
+
+[tool.ruff]
+line-length = 120
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "S",  # flake8-bandit
+    "G",  # flake8-logging-format
+    "PIE", # flake8-pie
+    "COM", # flake8-commas
+    "PT", # flake8-pytest-style
+    "Q",  # flake8-quotes
+    "RSE", # flake8-raise
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "TRY", # tryceratops
+    "RUF", # ruff specific rules
+]
+ignore = [
+    "B008",  # do not perform function calls in argument defaults
+    "S101",  # use of assert detected
+    "PT004", # fixture doesn't return anything
+    "PT013", # allow from pytest import thing
+    "SIM114", # allow have multiplie ifs with same body
+    "TRY003", # allow long exc message
+    "RUF100", # allow unused noqa
+    "E402", # allow module level import
+    "S102", # allow use of exec
+]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    ".venv",
+]
+per-file-ignores = {}
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+target-version = "py38"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

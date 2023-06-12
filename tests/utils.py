@@ -27,7 +27,7 @@ def ctxmanager() -> AsyncContextManager[int]:
 
 
 def raise_exc() -> NoReturn:
-    raise MyException()
+    raise MyException
 
 
 __all__ = [

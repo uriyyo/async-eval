@@ -13,7 +13,7 @@ def _as_async(code: str):
 @fixture(autouse=True)
 def _clear_modules():
     for name in [*sys.modules]:
-        if name.startswith("pydevd") or name.startswith("async_eval"):
+        if name.startswith(("pydevd", "async_eval")):
             del sys.modules[name]
 
 
@@ -127,4 +127,4 @@ def test_pydevd_integration():
 
     _globals = _locals = {}
 
-    exec(src, _globals, _locals)
+    exec(src, _globals, _locals)  # noqa: S102

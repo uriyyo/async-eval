@@ -101,7 +101,7 @@ def test_is_not_async_code(expr):
 
 
 @mark.parametrize(
-    "expr,result",
+    ("expr", "result"),
     [
         ("10", 10),
         ("regular", regular),
@@ -126,7 +126,7 @@ async def test_async_eval(expr, result):
 
 
 @mark.parametrize(
-    "expr,result",
+    ("expr", "result"),
     [
         ("a = 20", 20),
         ("a = regular", regular),

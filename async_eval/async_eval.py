@@ -20,7 +20,6 @@ from typing import (
 try:
     from _pydevd_bundle.pydevd_save_locals import save_locals
 except ImportError:  # pragma: no cover
-
     import ctypes
 
     def save_locals(frame: types.FrameType) -> None:
@@ -34,7 +33,7 @@ def _noop(*_: Any, **__: Any) -> Any:  # pragma: no cover
 _: Any
 
 try:
-    _ = verify_async_debug_available  # noqa
+    _ = verify_async_debug_available  # type: ignore # noqa
 except NameError:  # pragma: no cover
     try:
         from async_eval.asyncio_patch import verify_async_debug_available
@@ -42,7 +41,7 @@ except NameError:  # pragma: no cover
         verify_async_debug_available = _noop
 
 try:
-    _ = get_current_loop  # noqa
+    _ = get_current_loop  # type: ignore # noqa
 except NameError:  # pragma: no cover
     try:
         from async_eval.asyncio_patch import get_current_loop
@@ -70,12 +69,12 @@ async def __async_func__(_locals):
         r, is_exc = e, True
 
     return is_exc, r, copy_context()
-"""
+""",
 )
 
 
 def _compile_ast(node: ast.AST, filename: str = "<eval>", mode: str = "exec") -> types.CodeType:
-    return cast(types.CodeType, compile(node, filename, mode))
+    return cast(types.CodeType, compile(node, filename, mode))  # type: ignore
 
 
 ASTWithBody = Union[ast.Module, ast.With, ast.AsyncWith]

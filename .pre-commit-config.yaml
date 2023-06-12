@@ -1,27 +1,26 @@
 repos:
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.10.1
-    hooks:
-      - id: isort
-
-  - repo: https://github.com/ambv/black
-    rev: 22.12.0
+  - repo: local
     hooks:
       - id: black
+        language: python
+        name: black
+        pass_filenames: false
         language_version: python3.8
+        entry: poetry run black async_eval tests
 
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+  - repo: local
     hooks:
-      - id: flake8
-        exclude: examples
-        additional_dependencies:
-          - flake8-bugbear
+      - id: ruff
+        language: python
+        name: ruff
+        pass_filenames: false
+        language_version: python3.8
+        entry: poetry run ruff --fix --exit-non-zero-on-fix --show-fixes async_eval tests
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.991
+  - repo: local
     hooks:
       - id: mypy
-        exclude: tests
-        additional_dependencies:
-          - pydantic
+        language: python
+        name: mypy
+        pass_filenames: false
+        entry: poetry run mypy async_eval --show-error-codes
