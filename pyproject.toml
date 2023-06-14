@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "async_eval"
-version = "0.1.11"
+version = "0.2.0"
 description = "eval async code from sync"
 authors = ["Yurii Karabas <1998uriyyo@gmail.com>"]
 license = "MIT"
