@@ -8,7 +8,7 @@ readme = "README.md"
 repository = "https://github.com/uriyyo/async-eval"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6"
 pydevd-pycharm = { version = "<232.8660.147", optional = true }  # TODO: remove this, when pydevd-pycharm bug will be fixed
 trio = { version = ">=0.21,<0.23", optional = true }
 
