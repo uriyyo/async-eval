@@ -9,7 +9,7 @@ repository = "https://github.com/uriyyo/async-eval"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-pydevd-pycharm = { version = "<241.9959.31", optional = true }  # TODO: remove this, when pydevd-pycharm bug will be fixed
+pydevd-pycharm = { version = "<241.10840.17", optional = true }  # TODO: remove this, when pydevd-pycharm bug will be fixed
 trio = { version = ">=0.21,<0.23", optional = true }
 
 [tool.poetry.group.dev.dependencies]
