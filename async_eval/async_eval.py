@@ -4,7 +4,8 @@ import sys
 import textwrap
 import types
 from asyncio.tasks import _enter_task, _leave_task, current_task
-from contextvars import Context
+from concurrent.futures import ThreadPoolExecutor
+from contextvars import Context, copy_context
 from typing import (
     Any,
     Awaitable,
@@ -48,17 +49,30 @@ except NameError:  # pragma: no cover
     except ImportError:
         get_current_loop = _noop
 
+try:
+    _ = is_trio_running  # type: ignore # noqa
+except NameError:  # pragma: no cover
+    try:
+        from async_eval.asyncio_patch import is_trio_running
+    except ImportError:
+        is_trio_running = _noop
+
 
 _ASYNC_EVAL_CODE_TEMPLATE = textwrap.dedent(
     """\
-async def __async_func__(_locals):
+async def __async_func__(_locals, _ctx=None):
     async def __func_wrapper__(_locals):
         locals().update(_locals)
         try:
             pass
         finally:
             _locals.update(locals())
+            _locals.pop("_ctx", None)
             _locals.pop("_locals", None)
+
+    if _ctx:
+        for v in _ctx:
+            v.set(_ctx[v])
 
     from contextvars import copy_context
 
@@ -183,7 +197,7 @@ T = TypeVar("T")
 
 
 @no_type_check
-def _run_coro(coro: Awaitable[T]) -> T:
+def _asyncio_run_coro(coro: Awaitable[T]) -> T:
     loop = get_current_loop()
 
     if not loop.is_running():
@@ -204,6 +218,25 @@ def _run_coro(coro: Awaitable[T]) -> T:
     finally:
         if current is not None:
             _enter_task(loop, current)
+
+
+@no_type_check
+def _trio_run_coro(coro: Awaitable[T]) -> T:
+    import trio
+
+    async def _run() -> T:
+        return await coro
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(trio.run, _run).result()
+
+
+@no_type_check
+def _run_coro(func: Callable[..., Awaitable[T]], _locals: Any) -> T:
+    if is_trio_running():
+        return _trio_run_coro(func(_locals, copy_context()))
+
+    return _asyncio_run_coro(func(_locals))
 
 
 def _reflect_context(ctx: Context) -> None:
@@ -233,7 +266,7 @@ def async_eval(
     func = _compile_async_func(code_obj, _locals, _globals)
 
     try:
-        is_exc, result, ctx = _run_coro(func(_locals))
+        is_exc, result, ctx = _run_coro(func, _locals)
 
         _reflect_context(ctx)
 
