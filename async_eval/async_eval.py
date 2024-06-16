@@ -77,12 +77,12 @@ async def __async_func__(_locals, _ctx=None):
     from contextvars import copy_context
 
     try:
-       r = await __func_wrapper__(_locals)
+       rqa = await __func_wrapper__(_locals)
        is_exc = False
     except Exception as e:
-        r, is_exc = e, True
+        rqa , is_exc = e, True
 
-    return is_exc, r, copy_context()
+    return is_exc, rqa , copy_context()
 """,
 )
 
