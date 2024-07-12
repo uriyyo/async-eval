@@ -10,6 +10,7 @@ from typing import (
     Any,
     Awaitable,
     Callable,
+    Dict,
     Optional,
     Tuple,
     TypeVar,
@@ -122,13 +123,13 @@ def _transform_to_async(code: str, filename: str) -> types.CodeType:
 
 def _compile_async_func(
     code: types.CodeType,
-    _locals: dict,
-    _globals: dict,
-) -> Callable[[dict], Awaitable[Tuple[bool, Any, Context]]]:
+    _locals: Dict[str, Any],
+    _globals: Dict[str, Any],
+) -> Callable[[Dict[str, Any]], Awaitable[Tuple[bool, Any, Context]]]:
     exec(code, _globals, _locals)
 
     return cast(
-        Callable[[dict], Awaitable[Tuple[bool, Any, Context]]],
+        Callable[[Dict[str, Any]], Awaitable[Tuple[bool, Any, Context]]],
         _locals.pop("__async_func__"),
     )
 
@@ -244,8 +245,8 @@ def _reflect_context(ctx: Context) -> None:
 # async equivalent of builtin eval function
 def async_eval(
     code: str,
-    _globals: Optional[dict] = None,
-    _locals: Optional[dict] = None,
+    _globals: Optional[Dict[str, Any]] = None,
+    _locals: Optional[Dict[str, Any]] = None,
     *,
     filename: str = "<eval>",
 ) -> Any:
