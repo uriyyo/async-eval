@@ -1,5 +1,6 @@
 import ast
 import inspect
+import platform
 import sys
 import textwrap
 import types
@@ -21,20 +22,30 @@ from typing import (
 
 _: Any
 
+
+def is_pypy() -> bool:
+    return platform.python_implementation().lower() == "pypy"
+
+
 try:
-    from _pydevd_bundle.pydevd_save_locals import save_locals
+    from _pydevd_bundle.pydevd_save_locals import save_locals as _save_locals
 except ImportError:  # pragma: no cover
     import ctypes
 
     try:
         _ = ctypes.pythonapi
 
-        def save_locals(frame: types.FrameType) -> None:
+        def _save_locals(frame: types.FrameType) -> None:
             ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame), ctypes.c_int(1))
     except AttributeError:
 
-        def save_locals(frame: types.FrameType) -> None:
+        def _save_locals(frame: types.FrameType) -> None:
             pass
+
+
+def save_locals(frame: types.FrameType) -> None:
+    if not is_pypy():
+        _save_locals(frame)
 
 
 def _noop(*_: Any, **__: Any) -> Any:  # pragma: no cover
