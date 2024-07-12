@@ -67,6 +67,7 @@ ignore = [
     "RUF100", # allow unused noqa
     "E402", # allow module level import
     "S102", # allow use of exec
+    "COM812", # will be handled by ruff format
 ]
 exclude = [
     ".bzr",

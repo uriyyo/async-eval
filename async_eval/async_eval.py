@@ -19,20 +19,27 @@ from typing import (
     no_type_check,
 )
 
+_: Any
+
 try:
     from _pydevd_bundle.pydevd_save_locals import save_locals
 except ImportError:  # pragma: no cover
     import ctypes
 
-    def save_locals(frame: types.FrameType) -> None:
-        ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame), ctypes.c_int(1))
+    try:
+        _ = ctypes.pythonapi
+
+        def save_locals(frame: types.FrameType) -> None:
+            ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame), ctypes.c_int(1))
+    except AttributeError:
+
+        def save_locals(frame: types.FrameType) -> None:
+            pass
 
 
 def _noop(*_: Any, **__: Any) -> Any:  # pragma: no cover
     return None
 
-
-_: Any
 
 try:
     _ = verify_async_debug_available  # type: ignore # noqa
