@@ -1,4 +1,5 @@
 import contextvars
+import platform
 import textwrap
 from typing import ClassVar
 
@@ -13,6 +14,9 @@ from .utils import (  # noqa  # isort:skip
     raise_exc,
     regular,
 )
+
+
+IS_PYPY = platform.python_implementation().lower() == "pypy"
 
 
 @mark.parametrize(
@@ -135,6 +139,10 @@ class _ExecAsyncCodeSuite:
     async def test_async_eval(self, expr, result):
         assert async_eval(expr) == result
 
+    @mark.skipif(
+        IS_PYPY,
+        reason="PyPy doesn't have a way to update frame locals.",
+    )
     @mark.parametrize(
         ("expr", "result"),
         [
