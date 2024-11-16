@@ -1,5 +1,25 @@
 # async-eval
 
+## Install
+
+```
+poetry install
+```
+
+If not using PyCharm or PyDev, then specify "all-extras" install pydevd-pycharm:
+
+```
+poetry install --all-extras
+```
+
+## Run tests
+
+```
+pytest
+```
+
+## Usage
+
 ```python
 from async_eval import eval
 
