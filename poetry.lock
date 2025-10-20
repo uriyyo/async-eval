@@ -561,14 +561,14 @@ markers = {main = "os_name == \"nt\" and implementation_name != \"pypy\" and (ex
 
 [[package]]
 name = "pydevd-pycharm"
-version = "253.24325.40"
+version = "253.27642.35"
 description = "PyCharm Debugger (used in PyCharm and PyDev)"
 optional = true
 python-versions = "*"
 groups = ["main"]
 markers = "extra == \"all\" or extra == \"pydevd-pycharm\""
 files = [
-    {file = "pydevd_pycharm-253.24325.40.tar.gz", hash = "sha256:33b3ef2484d0c7bddb937a1875de9a1406d05c51ddabda476b11f2500a99d5a1"},
+    {file = "pydevd_pycharm-253.27642.35.tar.gz", hash = "sha256:b7fbabdbd93015d5b0ebafd1ee572af8cd3457c3335f3ab517cc0fa47e0e6863"},
 ]
 
 [[package]]
