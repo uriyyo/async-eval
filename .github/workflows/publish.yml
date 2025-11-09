@@ -9,22 +9,25 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.7 ]
+        python-version: [ "3.10" ]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - name: Install dependencies
+      - name: Build
         run: |
-          pip install -U poetry
+          uv build
 
       - name: Publish
         env:
           PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
           PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: poetry publish --build -u "${{ env.PYPI_USERNAME }}" -p "${{ env.PYPI_PASSWORD }}"
+        run: |
+          uv publish -u "${{ env.PYPI_USERNAME }}" -p "${{ env.PYPI_PASSWORD }}"

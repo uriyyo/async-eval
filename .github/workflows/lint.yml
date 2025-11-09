@@ -7,21 +7,22 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.8 ]
+        python-version: [ "3.8" ]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Install dependencies
         run: |
-          pip install -U poetry
-          poetry install -E all
+          uv sync --all-extras --dev
 
       - name: Lint
         run: |
-          poetry run pre-commit run --all-files
+          uv run pre-commit run --all-files --show-diff-on-failure
