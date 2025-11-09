@@ -98,6 +98,10 @@ def test_make_code_async(code, result):
 
 
 # issue #6
+@mark.skipif(
+    sys.version_info[:2] >= (3, 13),
+    reason="Not an issue for python 3.13+ because of PEP 667",
+)
 def test_evaluate_expression_should_update_locals(mocker):
     def _with_locals():
         yield
