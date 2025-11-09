@@ -31,10 +31,10 @@ def raise_exc() -> NoReturn:
 
 
 __all__ = [
-    "MyException",
-    "regular",
-    "generator",
     "AsyncContextManagerClass",
+    "MyException",
     "ctxmanager",
+    "generator",
     "raise_exc",
+    "regular",
 ]

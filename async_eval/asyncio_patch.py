@@ -38,7 +38,7 @@ def verify_async_debug_available() -> None:
 
 __all__ = [
     "get_current_loop",
-    "is_trio_running",
     "is_async_debug_available",
+    "is_trio_running",
     "verify_async_debug_available",
 ]

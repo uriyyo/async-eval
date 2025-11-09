@@ -18,7 +18,7 @@ def _clear_modules():
 
 
 params_mark = mark.parametrize(
-    "code,result",
+    ("code", "result"),
     [
         ("",) * 2,
         ("foo()",) * 2,
