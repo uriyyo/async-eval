@@ -3,19 +3,19 @@
 ## Install
 
 ```
-poetry install
+uv sync
 ```
 
 If not using PyCharm or PyDev, then specify "all-extras" install pydevd-pycharm:
 
 ```
-poetry install --all-extras
+uv sync --dev --all-extras
 ```
 
 ## Run tests
 
 ```
-pytest
+uv run pytest
 ```
 
 ## Usage
