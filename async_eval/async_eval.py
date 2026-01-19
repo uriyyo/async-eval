@@ -1,9 +1,11 @@
 import ast
+import asyncio
 import inspect
 import platform
 import sys
 import textwrap
 import types
+from asyncio import AbstractEventLoop
 from asyncio.tasks import _enter_task, _leave_task, current_task
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import Context, copy_context
@@ -52,29 +54,37 @@ def _noop(*_: Any, **__: Any) -> Any:  # pragma: no cover
     return None
 
 
-try:
-    _ = verify_async_debug_available  # type: ignore # noqa
-except NameError:  # pragma: no cover
+def is_trio_running() -> bool:
     try:
-        from async_eval.asyncio_patch import verify_async_debug_available
-    except ImportError:
-        verify_async_debug_available = _noop
+        from trio._core._run import GLOBAL_RUN_CONTEXT
+    except ImportError:  # pragma: no cover
+        return False
 
-try:
-    _ = get_current_loop  # type: ignore # noqa
-except NameError:  # pragma: no cover
-    try:
-        from async_eval.asyncio_patch import get_current_loop
-    except ImportError:
-        get_current_loop = _noop
+    return hasattr(GLOBAL_RUN_CONTEXT, "runner")
 
-try:
-    _ = is_trio_running  # type: ignore # noqa
-except NameError:  # pragma: no cover
+
+def get_current_loop() -> AbstractEventLoop:  # pragma: no cover
     try:
-        from async_eval.asyncio_patch import is_trio_running
-    except ImportError:
-        is_trio_running = _noop
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.new_event_loop()
+
+
+def is_async_debug_available(loop: Any = None) -> bool:
+    if loop is None:
+        loop = get_current_loop()
+
+    return bool(loop.__class__.__module__.lstrip("_").startswith("asyncio"))
+
+
+def verify_async_debug_available() -> None:
+    if not is_trio_running() and not is_async_debug_available():
+        cls = get_current_loop().__class__
+
+        raise RuntimeError(
+            f"Can not evaluate async code with event loop {cls.__module__}.{cls.__qualname__}. "
+            "Only native asyncio event loop can be used for async code evaluating.",
+        )
 
 
 _ASYNC_EVAL_CODE_TEMPLATE = textwrap.dedent(
@@ -296,4 +306,7 @@ def async_eval(
 
 sys.__async_eval__ = async_eval  # type: ignore
 
-__all__ = ["async_eval", "is_async_code"]
+__all__ = [
+    "async_eval",
+    "is_async_code",
+]

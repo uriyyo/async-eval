@@ -1,6 +1,6 @@
 import inspect
 
-from async_eval import async_eval, asyncio_patch
+from async_eval import async_eval
 
 from . import code
 
@@ -9,7 +9,6 @@ def generate_main_script() -> str:
     return "\n".join(
         inspect.getsource(m)
         for m in (
-            asyncio_patch,
             async_eval,
             code,
         )

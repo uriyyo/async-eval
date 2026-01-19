@@ -1,6 +1,7 @@
 import contextvars
 import platform
 import textwrap
+from concurrent.futures import ThreadPoolExecutor
 from typing import ClassVar
 
 from pytest import fixture, mark, raises
@@ -203,6 +204,14 @@ class _ExecAsyncCodeSuite:
         # fmt: on
 
         assert ctx_var.get() == 0
+
+
+class TestNonRunningEventLoop:
+    def test_non_running_evenloop(self):
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            fut = pool.submit(lambda: async_eval("await regular()"))
+
+            assert fut.result() == 10
 
 
 @mark.asyncio

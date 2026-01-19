@@ -14,8 +14,8 @@ except NameError:  # pragma: no cover
         from async_eval.async_eval import is_async_code
         from async_eval.asyncio_patch import verify_async_debug_available
     except ImportError:
-        is_async_code = _noop
-        verify_async_debug_available = _noop
+        is_async_code = _noop  # type: ignore
+        verify_async_debug_available = _noop  # type: ignore
 
 
 def make_code_async(code: str) -> str:
@@ -51,7 +51,7 @@ def evaluate_expression(thread_id: object, frame_id: object, expression: str, do
             del frame
 
 
-pydevd_vars.evaluate_expression = evaluate_expression
+pydevd_vars.evaluate_expression = evaluate_expression  # type: ignore
 
 # 2. Add ability to use async breakpoint conditions
 from _pydevd_bundle.pydevd_breakpoints import LineBreakpoint
@@ -70,7 +70,7 @@ def line_breakpoint_init(self: LineBreakpoint, *args: Any, **kwargs: Any) -> Non
     normalize_line_breakpoint(self)
 
 
-LineBreakpoint.__init__ = line_breakpoint_init
+LineBreakpoint.__init__ = line_breakpoint_init  # type: ignore
 
 # Update old breakpoints
 import gc
@@ -89,7 +89,7 @@ def console_exec(thread_id: object, frame_id: object, expression: str, dbg: Any)
     return original_console_exec(thread_id, frame_id, make_code_async(expression), dbg)
 
 
-pydevd_console_integration.console_exec = console_exec
+pydevd_console_integration.console_exec = console_exec  # type: ignore
 
 # 4. Add ability to use async code
 from _pydev_bundle.pydev_console_types import Command
@@ -102,7 +102,7 @@ def command_run(self: Command) -> None:
     self.more = self.interpreter.runsource(text, "<input>", symbol)
 
 
-Command.run = command_run
+Command.run = command_run  # type: ignore
 
 import sys
 from runpy import run_path
